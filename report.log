@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2022/dev/Debian) (preloaded format=pdflatex 2023.6.10)  13 JUN 2023 18:46
+This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2022/dev/Debian) (preloaded format=pdflatex 2023.6.10)  13 JUN 2023 19:20
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -429,15 +429,15 @@ e
 <quant.png, id=114, 472.76625pt x 103.38625pt>
 File: quant.png Graphic file (type png)
 <use quant.png>
-Package pdftex.def Info: quant.png  used on input line 42.
+Package pdftex.def Info: quant.png  used on input line 40.
 (pdftex.def)             Requested size: 212.74284pt x 46.52338pt.
-LaTeX Font Info:    Trying to load font information for U+msa on input line 48.
+LaTeX Font Info:    Trying to load font information for U+msa on input line 46.
 
 
 (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 48.
+LaTeX Font Info:    Trying to load font information for U+msb on input line 46.
 
 
 (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsb.fd
@@ -446,31 +446,31 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 
 
  <./quant.png>]
-Overfull \hbox (26.85858pt too wide) in paragraph at lines 126--135
+Overfull \hbox (26.85858pt too wide) in paragraph at lines 124--133
  [][] 
  []
 
 
-Overfull \hbox (26.85858pt too wide) in paragraph at lines 144--153
+Overfull \hbox (26.85858pt too wide) in paragraph at lines 142--151
  [][] 
  []
 
 
-Overfull \hbox (26.85858pt too wide) in paragraph at lines 162--171
+Overfull \hbox (26.85858pt too wide) in paragraph at lines 160--169
  [][] 
  []
 
 [2]
 
 LaTeX Warning: Reference `tab:fourier-wavelet' on page 3 undefined on input lin
-e 326.
+e 324.
 
 LaTeX Font Info:    Trying to load font information for OT1+pcr on input line 3
-40.
+38.
 (/usr/share/texlive/texmf-dist/tex/latex/psnfss/ot1pcr.fd
 File: ot1pcr.fd 2001/06/04 font definitions for OT1/pcr.
 )
-Underfull \hbox (badness 10000) in paragraph at lines 351--353
+Underfull \hbox (badness 10000) in paragraph at lines 349--351
 []\OT1/ptm/m/n/10 Use mean-ing-ful file-names, and not \OT1/pcr/m/n/10 temp1.py
 \OT1/ptm/m/n/10 ,
  []
@@ -520,7 +520,7 @@ ve/texmf-dist/fonts/type1/urw/times/utmb8a.pfb></usr/share/texlive/texmf-dist/f
 onts/type1/urw/times/utmbi8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw
 /times/utmr8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/times/utmri8a.
 pfb>
-Output written on report.pdf (4 pages, 185389 bytes).
+Output written on report.pdf (4 pages, 185456 bytes).
 PDF statistics:
  257 PDF objects out of 1000 (max. 8388607)
  216 compressed objects within 3 object streams

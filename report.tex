@@ -25,13 +25,11 @@
 
 \section{Introduction}
 
-[Communication costs linked to bandwidth usage and scalability issues]
+Distributed learning provides scalable and elastic compute power for model training. 
+However as the number of nodes increases, communication can saturate bandwidth limitations and cause large overheads.
+QSGD \cite{quant} proposes gradient quantization to trade-off lower bandwidth usage for higher variance during training, and shows that models will still converge to local optima. The paper gives two algorithmic ideas : a stochastic gradient quantization scheme and an efficient encoding of quantized gradients. In this report, we will only be concerned about the first idea and we will analyze the effects of gradient quantization on convergence rates in practice.
 
-\textbf{TODO}
-
-QSGD \cite{quant}  uses gradient quantization to trade-off lower bandwidth usage for higher variance in distributed training, and shows that models will still converge to local optima. The paper proposes two algorithmic ideas : a stochastic gradient quantization scheme and an efficient encoding of quantized gradients. In this report, we will only be concerned about the first idea and we will try to analyze the effects of gradient quantization on convergence rates in practice.
-
-We will be presenting the training of 3 popular models in different distributed settings and quantization rates, followed by a discussion. Remarkably, we found that in our applications we can reduce bandwidth usage by at least 4x without any percieved downside, and up to 8x with minor increase on convergence time. In terms of network accuracy, quantized training converges towards each model's top accuracy, and sometimes generalizes better on the test set.
+We will be presenting the results of training of 3 popular models in different distributed settings and quantization rates. Remarkably, we found that in our applications we can reduce bandwidth usage by at least 4x without any percieved downsides, and up to 8x with minor increase on convergence time. In terms of network accuracy, quantized training converges towards each model's top accuracy, and even sometimes generalizes better on the test set.
 
 \section{Technical Background}
 
@@ -56,7 +54,7 @@ With $p(a, s) = as - k$ for $a \in [0, 1]$. If $v = 0$, then we define $Q(v, s) 
 
 Intuitively, $k$ is the 0-based index to which the value will be mapped in the interval, for example 2 or 3 in Fig. \ref{fig:quant}. The $\xi_i(v, s)$'s are then the corresponding values at that index, 0.5 or 0.75 on the figure.
 
-Once this quantization is done, we exchange gradients using a simple encoding for which we estimate bandwidth usage in number of bits sent as such :
+Once this quantization is done, we exchange gradients using a simple encoding, for which we estimate bandwidth usage in number of bits sent as such :
 
 \noindent For a $n$ dimension vector with $q = log_2(s)$ quantization bits,
 
