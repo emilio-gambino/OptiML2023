@@ -2,28 +2,32 @@
 
 \usepackage[hidelinks]{hyperref}
 \usepackage{graphicx}	% For figure environment
-
+\usepackage{amsmath} % for mathematical symbols and environments
+\usepackage{amssymb} % for mathematical symbols
+\usepackage{amsfonts} % for mathematical fonts
+\usepackage{bbm} % for blackboard bold symbols
+\usepackage{setspace} % for blackboard bold symbols
 
 \begin{document}
 \title{Stochastic Gradient Quantization : \\ Saving Bandwidth in Distributed Learning}
 
 \author{
-  Cheng Soon Ong\\
-  \textit{Department of Computer Science, ETH Zurich, Switzerland}
+  Salim Zrouga, Dominik Frey, Emilien Guandalino\\
+  \textit{École Polytechnique Fédérale de Lausanne, Switzerland}
 }
 
 \maketitle
 
 \begin{abstract}
 
-	With the ever-increasing size of machine learning models, and with the development of scale-out architectures, distributed learning has become crucial to exploit the benefits of parallelism. Stochastic Gradient Descent (SGD) is naturally suited for this task as it can leverage the distribution of data. However, the necessary exchange of gradients among workers leads to bandwidth limitations becoming a new performance bottleneck. Quantized SGD (QSGD) addresses this issue through quantization of gradients before their exchange. This report aims to analyze the effects on convergence of such lossy compression schemes.
+	With the ever-increasing size of machine learning models, and with the development of scale-out architectures, distributed learning has become crucial to exploit the benefits of parallelism. Stochastic Gradient Descent (SGD) is naturally suited for this task as it can leverage the distribution of data. However, the necessary exchange of gradients among workers leads to bandwidth limitations becoming a new performance bottleneck. Quantized SGD (QSGD) addresses this issue through quantization of gradients before their exchange. This report aims to analyze the practical effects on convergence of such lossy compression schemes.
 \end{abstract}
 
 \section{Introduction}
 
-[If too much space, communication costs linked to bandwidth usage and scalability issues]
+[Communication costs linked to bandwidth usage and scalability issues]
 
-ah
+\textbf{TODO}
 
 QSGD \cite{quant}  uses gradient quantization to trade-off lower bandwidth usage for higher variance in distributed training, and shows that models will still converge to local optima. The paper proposes two algorithmic ideas : a stochastic gradient quantization scheme and an efficient encoding of quantized gradients. In this report, we will only be concerned about the first idea and we will try to analyze the effects of gradient quantization on convergence rates in practice.
 
@@ -41,17 +45,26 @@ Quantization is a signal processing technique in which continuous values are map
   \label{fig:quant}
 \end{figure}
 
-QSGD uses stochastic quantization defined as such :
+QSGD defines a stochastic quantization scheme for $s$ quantization levels of $v \in \mathbb{R}^{n}$, $v \neq 0$ :
+\[Q_s(v_i) = {\lVert v \rVert}_2 \cdot \text{{sgn}}(v_i) \cdot \xi_i(v, s)\]
+where $\xi_i(v, s)$'s are independent random variables defined as follows : Let $0 \leq k < s$ be an integer such that $\frac{{\lvert v_i \rvert}}{{\lVert v \rVert}_2} \in [\frac{k}{s}, \frac{k + 1}{s}]$. That is, $[\frac{k}{s}, \frac{k + 1}{s}]$ is the quantization interval corresponding to $\frac{{\lvert v_i \rvert}}{{\lVert v \rVert}_2}$. Then,
+\[\xi_i(v, s) = \begin{cases}
+\frac{k}{s} & \text{{with probability }} 1 - p\left(\frac{{\lvert v_i \rvert}}{{\lVert v \rVert}_2}, s\right), \\
+\frac{k + 1}{s} & \text{{otherwise}}.
+\end{cases}\]
+With $p(a, s) = as - k$ for $a \in [0, 1]$. If $v = 0$, then we define $Q(v, s) = 0$. 
 
-give quantization formula
+Intuitively, $k$ is the 0-based index to which the value will be mapped in the interval, for example 2 or 3 in Fig. \ref{fig:quant}. The $\xi_i(v, s)$'s are then the corresponding values at that index, 0.5 or 0.75 on the figure.
 
-Gradients can be compressed to sending a 32 bit norm, a bit vector of signs and a n element vector of q bit quantization indices.
+Once this quantization is done, we exchange gradients using a simple encoding for which we estimate bandwidth usage in number of bits sent as such :
 
-put example of quantized vector
+\noindent For a $n$ dimension vector with $q = log_2(s)$ quantization bits,
 
+\begin{center}
+ \# bits = $32 + n + q * n$
+\end{center}
 
-This compression of gradients introduces a quantization error, which we can mitigate during training with a process we will call error correction. Upon each iteration, save the quantization error, and add it to the gradient on the next iteration. This preserves even more information in expectation.
-
+We send 32 bits for the norm, $n$ bits for the sign vector, and the $n$ quantization indices $k$ of $q$ bits each, from which $\xi_i(v, s)$ can be recovered. QSGD actually proposes a more clever encoding, but this one is simple enough and sufficient for our analysis.
 
 \section{Experiments}
 
@@ -63,41 +76,109 @@ We will conduct our experiments on an image classification task on the CIFAR-10 
 
 \subsubsection{Models}
 
-We train 3 popular models : AlexNet, ResNet50 and ResNet110.
+We train 3 popular models for image classigication : AlexNet, ResNet18 and ResNet110. AlexNet is a large convolutional neural network with 58M parameters.
 
-Short intro to the models
+Short intro to the models \textbf{TODO}
 
 We will train our models on 1, 2, 4, and 8 nodes
 
 \subsubsection{Optimization}
 
-As mentionned earlier, SGD is well suited for distributed learning tasks as it can take advantage of the data parallelism. We therefore split our data accross nodes, perform computation per node, and then average out the gradients. Quantization of the gradients is added at each node level before global averaging.
+As mentioned earlier, SGD is well suited for distributed learning tasks as it can take advantage of the data parallelism. We therefore split our data accross nodes, perform computation per node, and then average out the gradients. Quantization of the gradients is added at each node level before global averaging. We will be presenting results for up to 2, 4 and 8 bit quantization.
+
+\subsubsection{Error correction}
+
+The compression of gradients introduces an approximation error called quantization error. We can mitigate this information loss during training with a process we will call error correction. Upon each iteration, we remember the quantization error and add it to the gradient on the next iteration before quantization. This preserves more information in expectation accross iterations.
 
 \subsubsection{Evaluation Method}
-How do we evaluate the networks ?
 
-Run baseline model and compare
+For each model, we first train a baseline model and compare based on the following three metrics :
 
-Accuracy - do we reach top ??
-Convergence time - in how many epochs (roughly)
-Communication costs - speedup from quantization bits
-
-
-\subsubsection{ Stochastic vs without}
-\subsubsection{ Added error correction}
+\begin{itemize}
+	\item[--] \textit{Accuracy :} Do we reach the same top accuracy as the baseline model ?
+	\item[--] \textit{Convergence Time :} How many epochs do we train until we reach top baseline accuracy ?
+	\item[--] \textit{Bandwidth saving estimates :} What ratio of bytes are we saving per iteration per node ? This is based on the basic encoding we defined in the technical background section and could be improved using more clever encondings.
+\end{itemize}
 
 \subsection{Simulating Distributed Training}
 
-Distributed training is difficult to implement properly and requires to deal with multiple GPUs, message passing protocols, gradient encodings and other problems. We decided to simulate distributed training instead, using a single GPU which sequentially computes forward and backward passes, quantizes gradients, and averages them out on a single model. We are still able to see effects on convergence rates, and do not have to worry about how to actually efficiently exchange the gradients.
+Distributed training is difficult to implement properly and requires to deal with multiple GPUs, message passing protocols, gradient encodings, and other tricky problems which are outside the scope of this project. We decided to simulate distributed training instead, using a single GPU which sequentially computes forward and backward passes, quantizes gradients, and averages them out on a single model. 
 
-The ultimate goal is to decrease training time. We can only assess \# iteration until convergence vs bandwidth
-Explain that however we cannot see the decrease in communication time
+A good point is that we are still able to see the negative effects of quantization on convergence rates, in terms of number of iterations. However, a major drawback is that since we are not actually broadcasting the gradients, we cannot truly measure improvements on communication costs. When using quantization for bandwidth reduction we essentially trade-off higher computation time for lower communication time. By balancing out this ratio, we decrease total training time, not in terms of iterations but in real time. This improvement cannot be measured quantitatively in our situation, only roughly estimated by looking at the number of bits saved per node.
+
 
 \subsection{Results}
 
-Table containing all the results
+\textbf{TODO}
+
+Stochastic quantization,
+Error correction
+
+Explain parameters
+
+number of epochs, 
+
+For each model, detail training parameters
+
+
+\begin{table}[htbp]
+  \centering
+  \begin{tabular}[c]{|l||l|l|l|}
+    \hline
+    Model&Accuracy&Convergence Time&Bandwidth Saving\\
+    \hline
+    AlexNet&global&sine like&localized\\
+    ResNet18&local&localized&sine like\\
+    wavelet&local&localized&sine like\\
+    \hline
+  \end{tabular}
+
+  \singlespacing
+	\caption{Results for 8 bit Quantization}
+\end{table}
+
+Explications of the results here
+
+\begin{table}[htbp]
+  \centering
+  \begin{tabular}[c]{|l||l|l|l|}
+    \hline
+    Model&Accuracy&Convergence Time&Bandwidth Saving\\
+    \hline
+    AlexNet&global&sine like&localized\\
+    ResNet18&local&localized&sine like\\
+    wavelet&local&localized&sine like\\
+    \hline
+  \end{tabular}
+
+  \singlespacing
+	\caption{Results for 4 bit Quantization}
+\end{table}
+
+Explications of the results here
+
+\begin{table}[htbp]
+  \centering
+  \begin{tabular}[c]{|l||l|l|l|}
+    \hline
+    Model&Accuracy&Convergence Time&Bandwidth Saving\\
+    \hline
+    AlexNet&global&sine like&localized\\
+    ResNet18&local&localized&sine like\\
+    wavelet&local&localized&sine like\\
+    \hline
+  \end{tabular}
+
+  \singlespacing
+	\caption{Results for 4 bit Quantization}
+\end{table}
+Explications of the results here
 
 \subsection{Discussion}
+
+\textbf{TODO}
+
+In our practical applications, is no percievable difference for larger than 8 bits, like 16 bits
 
 Computation overhead
 
@@ -109,19 +190,13 @@ AlexNet x2 speedup
 
 \section{Summary}
 
+\textbf{TODO}
+
 Present results
 
 Limitations -> mpi protocols to support
+no communication costs
 
-
-Scientific papers usually begin with the description of the problem,
-justifying why the problem is interesting. Most importantly, it argues
-that the problem is still unsolved, or that the current solutions are
-unsatisfactory. This leads to the main gist of the paper, which is
-``the idea''. The authors then show evidence, using derivations or
-experiments, that the idea works. Since science does not occur in a
-vacuum, a proper comparison to the current state of the art is often
-part of the results. Following these ideas, papers usually have the
 following structure:
 \begin{description}
 \item[Abstract] \ \\
@@ -250,19 +325,6 @@ want to address in the text portion of the results.
 The information from the figures is
 summarized in Table~\ref{tab:fourier-wavelet}.
 
-\begin{table*}[htbp]
-  \centering
-  \begin{tabular}[c]{|l||l|l|l|}
-    \hline
-    Basis&Support&Suitable signals&Unsuitable signals\\
-    \hline
-    Fourier&global&sine like&localized\\
-    wavelet&local&localized&sine like\\
-    \hline
-  \end{tabular}
-  \caption{Characteristics of Fourier and wavelet basis.}
-  \label{tab:fourier-wavelet}
-\end{table*}
 
 When reporting computational or measurement results, always
 report the mean (average value) along with a measure of variability
@@ -350,6 +412,7 @@ and solutions.
 \section*{Acknowledgements}
 
 Thanks to the authors of QSGD for amazing paper. Thanks to the provided code which we adapted and enabled us to quickly start working on the interesting stuff.
+Thanks to our corrector for taking the time to read our work.
 
 
 \newpage
