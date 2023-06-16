@@ -1,6 +1,8 @@
 # EPFL Spring 2023 - Optimization for Machine Learning: Stochastic Gradient Quantization 
 
-This is the code repository our CS-439 project. For this project, we decided to investigate the effects of gradient quantization on convergence in distributed learning problems. We have provided a report which explains our experiments and contains our findings. We have also provided all the code needed to reproduce our results. See below for each individual case.
+This is the code repository our CS-439 project. For this project, we decided to investigate the effects of gradient quantization on convergence in distributed learning problems. We have based our work on the theory provided by the following paper : "QSGD: Communication-Efficient SGD via Gradient Quantization and Encoding", https://arxiv.org/pdf/1610.02132v4.pdf.
+
+We have provided a report which explains our experiments and contains our findings. We have also provided all the code needed to reproduce our results. See below for each individual case.
 
 # Abstract
 
