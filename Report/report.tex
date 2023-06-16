@@ -177,7 +177,7 @@ Bandwidth savings are a constant ratio which only depends on the number of bits 
     \hline
 	  Quantization&Accuracy&Epochs&Bandwidth\\
     \hline
-	  32 bits&83.92\% &12&1x\\
+	  32 bits&86.98\% &30&1x\\
 	  8 bits&87.06\%&27&3.6x\\
 	  4 bits&87.15\%&30&6.4x\\
 	  2 bits&86.82\%&32&10.7x\\
@@ -189,11 +189,7 @@ Bandwidth savings are a constant ratio which only depends on the number of bits 
 \vspace{-1.5em}
 
 
-Explication of results here 
-
-\textbf{Early Stopping}
-
-line
+Here, we used early stopping to determine when the model had converged. If the performance on the validation set has not improved after a certain number of epochs, called "patience", the training ends and we return the best performing model.
 \vspace{0.3em}
 
 
