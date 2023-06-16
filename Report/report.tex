@@ -144,11 +144,11 @@ All the following experiments simulated a distributed settings with $n = 2$ node
 \end{table}
 
 \vspace{-1.5em}
-\noindent It is hard to estimate exactly when a model has converged to top test accuracy during training. We therefore saved the 3 models which performed the best on validation set and reported the greatest test accuracy out of the 3. Although some variance is always to be expected between experiments, we can see that there is a clear trend of increasing convergence time for coarser quantization levels. Between 32 bits and 2 bits quantization, the accuracy is better by 0.38\%, the convergence time is about 2.3x longer, but the amount of saved bandwidth is 10.7x compared to baseline. \textbf{TODO}
+\noindent It is hard to estimate exactly when a model has converged to top test accuracy during training. We therefore saved the 3 models which performed the best on validation set and reported the greatest test accuracy out of the 3. Although some variance is always to be expected between experiments, we can see that there is a clear trend of increasing convergence time for coarser quantization levels. Between 32 bits and 2 bits quantization, the accuracy is better by 0.38\%, the convergence time is about 2.3x longer, but the amount of saved bandwidth is 10.7x compared to baseline.
 \vspace{0.3em}
 
 
-\textbf{ResNet50:} For this model, we used stochastic quantization, error correction, batch size per node of $B = 128$, weight decay $w = 0.001$, step size $\gamma = 0.01$ and momentum $m = 0.9$.
+\textbf{ResNet50:} As this model is quite big, we set the number of epochs to 20 in order to limit the running time. As for the parameters, we used stochastic quantization, error correction, batch size per node of $B = 128$, weight decay $w = 0.001$, step size $\gamma = 0.01$ and momentum $m = 0.9$.
 \begin{table}[htbp]
   \centering
   \begin{tabular}[c]{|c||c|c|c|}
@@ -156,7 +156,7 @@ All the following experiments simulated a distributed settings with $n = 2$ node
           Quantization&Accuracy&Epochs&Bandwidth\\
     \hline
           32 bits&82.22\% &20&1x\\
-          8 bits&82.78\%&13&3.6x\\
+          8 bits&82.78\%&16&3.6x\\
           4 bits&82.48\%&18&6.4x\\
           2 bits&81.56\%&20&10.7x\\
     \hline
@@ -166,7 +166,8 @@ All the following experiments simulated a distributed settings with $n = 2$ node
 \end{table}
 
 \vspace{-1.5em}
-Bandwidth savings are a constant ratio which only depends on the number of bits of quantization. In terms of actual space saved, models with larger number of parameters will benefit more from quantization on each iteration.
+We can observe an increasing accuracy for the number of quantization bits, where quantization with 8 bits converged the fastest to its top accuracy value.
+As for bandwidth savings, they are a constant ratio which only depends on the number of bits of quantization. In terms of actual space saved, models with larger number of parameters will benefit more from quantization on each iteration.
 \vspace{0.3em}
 
 \textbf{ResNet18:} For this model, we used stochastic quantization, error correction, batch size per node of $B = 128$, weight decay $w = 0.001$, step size $\gamma = 0.01$ and momentum $m = 0.9$.

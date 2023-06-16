@@ -26,5 +26,13 @@ To run the models, you can run the provided notebook sequentially. This will fir
 
 ## ResNet50
 
+In order to run Resnet50, you can execute the respective notebook sequentially. This will first execute runs for quantization of 2, 4 and 8 bits and finally an additional run for the baseline model without quantization (i.e. 32 bits).
+
 
 ## ResNet18
+To run the models, you can run the provided notebook sequentially. This will initially recompute and test the baseline model at 32 bits, followed by the versions quantized to 2, 4, and 8 bits 
+respectively.
+
+
+
+
