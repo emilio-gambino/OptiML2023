@@ -1,4 +1,4 @@
-# EPFL Spring 2023 - Optimization for Machine Learning: Stochastic Gradient Quantization : Saving Bandwidth in Distributed Learning
+# EPFL Spring 2023 - Optimization for Machine Learning: Stochastic Gradient Quantization 
 
 This is the code repository our CS-439 project. For this project, we decided to investigate the effects of gradient quantization on convergence in distributed learning problems. We have provided a report which explains our experiments and contains our findings. We have also provided all the code needed to reproduce our results. See below for each individual case.
 
