@@ -29,7 +29,7 @@ Distributed learning provides scalable and elastic compute power for model train
 However as the number of nodes increases, communication can saturate bandwidth limitations and cause large overheads.
 QSGD \cite{quant} proposes gradient quantization to trade-off lower bandwidth usage for higher variance during training, and shows that models will still converge to local optima. The paper gives two algorithmic ideas : a stochastic gradient quantization scheme and an efficient encoding of quantized gradients. In this report, we will only be concerned about the first idea and we will analyze the effects of gradient quantization on convergence rates in practice.
 
-We will be presenting the results of training of 3 popular models in different distributed settings and quantization rates. Remarkably, we found that in our applications we can reduce bandwidth usage by at least 4x without any percieved downsides, and up to 8x with minor increase on convergence time. In terms of network accuracy, quantized training converges towards each model's top accuracy, and even sometimes generalizes better on the test set.
+We will be presenting the results of training 3 popular models in a distributed settings with different quantization rates. Remarkably, we found that in our applications we can reduce bandwidth usage by at least 3.6x without any percieved downsides, and up to 6.4x with minor increase on convergence time. In terms of network accuracy, quantized training converges towards each model's top accuracy and often generalizes better on the test set.
 
 \section{Technical Background}
 
@@ -52,17 +52,22 @@ where $\xi_i(v, s)$'s are independent random variables defined as follows : Let 
 \end{cases}\]
 With $p(a, s) = as - k$ for $a \in [0, 1]$. If $v = 0$, then we define $Q(v, s) = 0$. 
 
-Intuitively, $k$ is the 0-based index to which the value will be mapped in the interval, for example 2 or 3 in Fig. \ref{fig:quant}. The $\xi_i(v, s)$'s are then the corresponding values at that index, 0.5 or 0.75 on the figure.
+Intuitively, $k$ is the 0-based index to which the value will be mapped in the interval, for example 2 or 3 in Fig. \ref{fig:quant}. The $\xi_i(v, s)$'s are then the corresponding values at that index, 0.5 or 0.75 in our example.
 
-Once this quantization is done, we exchange gradients using a simple encoding, for which we estimate bandwidth usage in number of bits sent as such :
+Once this quantization is done, we exchange gradients using the simple encoding given bellow :
 
-\noindent For a $n$ dimension vector with $q = log_2(s)$ quantization bits,
+\vspace{-0.6em}
+\singlespacing
+\noindent \emph{Encoding} : For a $n$ dimension vector with $q = log_2(s)$ quantization bits, send 32 bits for the norm, $n$ bits for the sign vector, and the $n$ quantization indices $k$ of $q$ bits each, from which $\xi_i(v, s)$ can be recovered.
+\vspace{-0.6em}
+\singlespacing
+We therefore estimate the bandwidth usage in number of bits sent as such :
 
 \begin{center}
  \# bits = $32 + n + q * n$
 \end{center}
 
-We send 32 bits for the norm, $n$ bits for the sign vector, and the $n$ quantization indices $k$ of $q$ bits each, from which $\xi_i(v, s)$ can be recovered. QSGD actually proposes a more clever encoding, but this one is simple enough and sufficient for our analysis.
+QSGD actually proposes a more clever encoding, but this one is simple enough and sufficient for our analysis.
 
 \section{Experiments}
 
@@ -74,11 +79,22 @@ We will conduct our experiments on an image classification task on the CIFAR-10 
 
 \subsubsection{Models}
 
-We train 3 popular models for image classigication : AlexNet, ResNet18 and ResNet110. AlexNet is a large convolutional neural network with 58M parameters.
+We train 3 popular models for image classification : AlexNet, ResNet18 and ResNet50. 
 
-Short intro to the models \textbf{TODO}
+\noindent \textbf{AlexNet:} AlexNet is a deep convolutional neural network which achieved state of the art performance on the ImageNet challenge. Our implementation \cite{alexnet} has a total of 58 million parameters.
 
-We will train our models on 1, 2, 4, and 8 nodes
+\noindent \textbf{ResNet:}
+The ResNet architecture is built upon VGG networks. In order to train deeper networks and to circumvent the problem of vanishing gradients, the ResNet architecture in general includes skip connections between convolutional layers. These skip connections add the output from the previous layer to the layer ahead via an identity mapping, i.e. it does not apply any modification the the output from the previous layer \cite{resnet}:
+\begin{align*}
+    y = \mathcal{F}(x) + x
+\end{align*}
+However, sometimes these outputs do not have the same dimensions, as we perform the convolution operation. To fix this, the identity mapping is multiplied by a linear projection $W$ in order to match the size of the different outputs \cite{shorten}:
+\begin{align*}
+    y = \mathcal{F}(x, \{W_i\}) + W_d \times x
+\end{align*}
+
+All ResNet variants have 5 different kinds of convolutional layers. The ResNet architectures then differ in the number of convolutional layers for each of these five kinds, which always stay in the same proportions.
+
 
 \subsubsection{Optimization}
 
@@ -93,7 +109,7 @@ The compression of gradients introduces an approximation error called quantizati
 For each model, we first train a baseline model and compare based on the following three metrics :
 
 \begin{itemize}
-	\item[--] \textit{Accuracy :} Do we reach the same top accuracy as the baseline model ?
+	\item[--] \textit{Accuracy :} Do we reach the same top test accuracy as the baseline model ?
 	\item[--] \textit{Convergence Time :} How many epochs do we train until we reach top baseline accuracy ?
 	\item[--] \textit{Bandwidth saving estimates :} What ratio of bytes are we saving per iteration per node ? This is based on the basic encoding we defined in the technical background section and could be improved using more clever encondings.
 \end{itemize}
@@ -107,310 +123,104 @@ A good point is that we are still able to see the negative effects of quantizati
 
 \subsection{Results}
 
-\textbf{TODO}
+All the following experiments simulated a distributed settings with $n = 2$ nodes. We would expect similar results when running 4 or 8 nodes in terms of accuracy and convergence rate, although the real time speedup would be much greater. We first run a baseline experiment with no quantization, i.e. 32 bits and compare different quantization levels based on the previously mentioned criteria : Test Accuracy, Epochs to Convergence and Bandwidth Saving.
 
-Stochastic quantization,
-Error correction
-
-Explain parameters
-
-number of epochs, 
-
-For each model, detail training parameters
-
+\textbf{AlexNet:} We used stochastic quantization, error correction, batch size per node $B = 64$, step size $\gamma = 0.005$, weight decay $w = 0.005$, and momemtum $m = 0.9$. 
 
 \begin{table}[htbp]
   \centering
-  \begin{tabular}[c]{|l||l|l|l|}
+  \begin{tabular}[c]{|c||c|c|c|}
     \hline
-    Model&Accuracy&Convergence Time&Bandwidth Saving\\
+	  Quantization&Accuracy&Epochs&Bandwidth\\
     \hline
-    AlexNet&global&sine like&localized\\
-    ResNet18&local&localized&sine like\\
-    wavelet&local&localized&sine like\\
+	  32 bits&83.92\% &12&1x\\
+	  8 bits&84.2\%&18&3.6x\\
+	  4 bits&85.19\%&22&6.4x\\
+	  2 bits&84.3\%&28&10.7x\\
     \hline
   \end{tabular}
-
-  \singlespacing
-	\caption{Results for 8 bit Quantization}
+	\vspace{0.7em}
+	\caption{Training Results for AlexNet}
 \end{table}
 
-Explications of the results here
+\vspace{-1.5em}
+\noindent It is hard to estimate exactly when a model has converged to top test accuracy during training. We therefore saved the 3 models which performed the best on validation set and reported the greatest test accuracy out of the 3. Although some variance is always to be expected between experiments, we can see that there is a clear trend of increasing convergence time for coarser quantization levels. Between 32 bits and 2 bits quantization, the accuracy is better by 0.38\%, the convergence time is about 2.3x longer, but the amount of saved bandwidth is 10.7x compared to baseline. \textbf{TODO}
+\vspace{0.3em}
+
+
+\textbf{ResNet50:} For this model, we used stochastic quantization, error correction, batch size per node of $B = 128$, weight decay $w = 0.001$, step size $\gamma = 0.01$ and momentum $m = 0.9$.
+\begin{table}[htbp]
+  \centering
+  \begin{tabular}[c]{|c||c|c|c|}
+    \hline
+          Quantization&Accuracy&Epochs&Bandwidth\\
+    \hline
+          32 bits&82.22\% &20&1x\\
+          8 bits&82.78\%&13&3.6x\\
+          4 bits&82.48\%&18&6.4x\\
+          2 bits&81.56\%&20&10.7x\\
+    \hline
+  \end{tabular}
+        \vspace{0.7em}
+        \caption{Training Results for ResNet50}
+\end{table}
+
+\vspace{-1.5em}
+Bandwidth savings are a constant ratio which only depends on the number of bits of quantization. In terms of actual space saved, models with larger number of parameters will benefit more from quantization on each iteration.
+\vspace{0.3em}
+
+\textbf{ResNet18:} For this model, we used stochastic quantization, error correction, batch size per node of $B = 128$, weight decay $w = 0.001$, step size $\gamma = 0.01$ and momentum $m = 0.9$.
 
 \begin{table}[htbp]
   \centering
-  \begin{tabular}[c]{|l||l|l|l|}
+  \begin{tabular}[c]{|c||c|c|c|}
     \hline
-    Model&Accuracy&Convergence Time&Bandwidth Saving\\
+	  Quantization&Accuracy&Epochs&Bandwidth\\
     \hline
-    AlexNet&global&sine like&localized\\
-    ResNet18&local&localized&sine like\\
-    wavelet&local&localized&sine like\\
-    \hline
-  \end{tabular}
-
-  \singlespacing
-	\caption{Results for 4 bit Quantization}
-\end{table}
-
-Explications of the results here
-
-\begin{table}[htbp]
-  \centering
-  \begin{tabular}[c]{|l||l|l|l|}
-    \hline
-    Model&Accuracy&Convergence Time&Bandwidth Saving\\
-    \hline
-    AlexNet&global&sine like&localized\\
-    ResNet18&local&localized&sine like\\
-    wavelet&local&localized&sine like\\
+	  32 bits&83.92\% &12&1x\\
+	  8 bits&87.06\%&27&3.6x\\
+	  4 bits&87.15\%&30&6.4x\\
+	  2 bits&86.82\%&32&10.7x\\
     \hline
   \end{tabular}
-
-  \singlespacing
-	\caption{Results for 4 bit Quantization}
+	\vspace{0.7em}
+	\caption{Training Results for ResNet18}
 \end{table}
-Explications of the results here
+\vspace{-1.5em}
+
+
+Explication of results here 
+
+\textbf{Early Stopping}
+
+line
+\vspace{0.3em}
+
 
 \subsection{Discussion}
 
-\textbf{TODO}
 
-In our practical applications, is no percievable difference for larger than 8 bits, like 16 bits
+Overall, the results seem to confirm what is presented in the QSGD paper, that is, as the quantization level gets smaller, models take longer to converge to their top accuracy. On the good side, models with quantized training are consistently better in test accuracy than the baseline models, which we can assume to be due to less overfitting from lower precision gradients. This obviously has a limit, as a too aggressive quantization will eventually degrade top accuracy.
 
-Computation overhead
+\textit{Communication costs:} Concerning bandwidth saving estimates, once again it is hard to say how much the real time speedup would be from this. However, if bandwidth limitation is saturated, waiting times grow exponentially which may lead to massive communication overheads. Preventing this from happening on each iteration is most likely worth the extra number of convergence epochs. 
 
-Too agressive quantization hurts accuracy
-
-Communication vs Computation intensive
-
-AlexNet x2 speedup
-
-\section{Summary}
-
-\textbf{TODO}
-
-Present results
-
-Limitations -> mpi protocols to support
-no communication costs
-
-following structure:
-\begin{description}
-\item[Abstract] \ \\
-  Short description of the whole paper, to help the
-  reader decide whether to read it.
-\item[Introduction] \ \\
-  Describe your problem and state your
-  contributions.
-\item[Models and Methods] \ \\
-  Describe your idea and how it was implemented to solve
-  the problem. Survey the related work, giving credit where credit is
-  due.
-\item[Results] \ \\
-  Show evidence to support your claims made in the
-  introduction.
-\item[Discussion] \ \\
-  Discuss the strengths and weaknesses of your
-  approach, based on the results. Point out the implications of your
-  novel idea on the application concerned.
-\item[Summary] \ \\
-  Summarize your contributions in light of the new
-  results.
-\end{description}
+\textit{Computation Costs:} When comparing with the baseline run, quantization added a massive overhead in computation time (at least 3x), especially when running stochastic quantization instead of deterministic one. We tried training with determinstic quantization, which yielded smaller running times, but this affected top accuracy. For AlexNet, when training for 2 bits, the model never scored better than 73\% of test score, even with a large number of epochs. We believe that this increase of computation is due to the expensive nature of generating a random number for each quantized value, but this overhead is necessary to reach top accuracy. In truly distributed applications, those computation costs would be parallelized, but would still represent a substantial increase.
 
 
-\section{Tips for Good Writing}
-\label{sec:tips-writing}
+\begin{center}
+\textit{Perfectly balanced, as all things should be..}
+\end{center}
 
-The ideas for good writing have come
-from~
-
-\subsection{Getting Help}
-One should try to get a draft read by as many friendly people as
-possible. And remember to treat your test readers with respect. If
-they are unable to understand something in your paper, then it is
-highly likely that your reviewers will not understand it
-either. Therefore, do not be defensive about the criticisms you get,
-but use it as an opportunity to improve the paper. Before your submit
-your friends to the pain of reading your draft, please \emph{use a
-  spell checker}.
-
-\subsection{Abstract}
-The abstract should really be written last, along with the title of
-the paper. The four points that should be covered~
-\begin{enumerate}
-\item State the problem.
-\item Say why it is an interesting problem.
-\item Say what your solution achieves.
-\item Say what follows from your solution.
-\end{enumerate}
-
-\subsection{Figures and Tables}
-
-\begin{figure}[tbp]
-  \centering
-  %\includegraphics[width=\columnwidth]{denoised_signal_1d}
-  \caption{Signal compression and denoising using the Fourier basis.}
-  \vspace{-3mm}
-  \label{fig:denoise-fourier}
-\end{figure}
-\begin{figure}[htbp]
-  \centering
-  %\includegraphics[width=\columnwidth]{local_wdenoised_1d}
-  \vspace{-3mm}
-  \caption{Signal compression and denoising using the Daubechies wavelet basis.}
-  \label{fig:denoise-wavelet}
-\end{figure}
-
-Use examples and illustrations to clarify ideas and results. For
-example, by comparing Figure~\ref{fig:denoise-fourier} and
-Figure~\ref{fig:denoise-wavelet}, we can see the two different
-situations where Fourier and wavelet basis perform well. 
-
-\subsection{Models and Methods}
-The models and methods
-section should describe what was
-done to answer the research question, describe how it was done,
-justify the experimental design, and
-explain how the results were analyzed.
-
-The model refers to the underlying mathematical model or structure which 
-you use to describe your problem, or that your solution is based on. 
-The methods on the other hand, are the algorithms used to solve the problem. 
-In some cases, the suggested method directly solves the problem, without having it 
-stated in terms of an underlying model. Generally though it is a better practice to have 
-the model figured out and stated clearly, rather than presenting a method without specifying 
-the model. In this case, the method can be more easily evaluated in the task of fitting 
-the given data to the underlying model.
-
-The methods part of this section, is not a step-by-step, directive,
-protocol as you might see in your lab manual, but detailed enough such
-that an interested reader can reproduce your
-work~
-
-The methods section of a research paper provides the information by
-which a study's validity is judged.
-Therefore, it requires a clear and precise description of how an
-experiment was done, and the rationale
-for why specific experimental procedures were chosen.
-It is usually helpful to
-structure the methods section by~
-\begin{enumerate}
-\item Layout the model you used to describe the problem or the solution.
-\item Describing the algorithms used in the study, briefly including
-  details such as hyperparameter values (e.g. thresholds), and
-  preprocessing steps (e.g. normalizing the data to have mean value of
-  zero).
-\item Explaining how the materials were prepared, for example the
-  images used and their resolution.
-\item Describing the research protocol, for example which examples
-  were used for estimating the parameters (training) and which were
-  used for computing performance.
-\item Explaining how measurements were made and what
-  calculations were performed. Do not reproduce the full source code in
-  the paper, but explain the key steps.
-\end{enumerate}
-
-\subsection{Results}
-
-Organize the results section based on the sequence of table and
-figures you include. Prepare the tables and figures as soon as all
-the data are analyzed and arrange them in the sequence that best
-presents your findings in a logical way. A good strategy is to note,
-on a draft of each table or figure, the one or two key results you
-want to address in the text portion of the results.
-The information from the figures is
-summarized in Table~\ref{tab:fourier-wavelet}.
-
-
-When reporting computational or measurement results, always
-report the mean (average value) along with a measure of variability
-(standard deviation(s) or standard error of the mean).
-
-
-\section{Tips for Good Software}
-\label{sec:tips-software}
-
-There is a lot of literature (for example~
-reader happy:
-\begin{itemize}
-\item Have a \texttt{README} file that (at least) describes what your
-  software does, and which commands to run to obtain results. Also
-  mention anything special that needs to be set up, such as
-  toolboxes\footnote{For those who are
-  particularly interested, other common structures can be found at
-  \url{http://en.wikipedia.org/wiki/README} and
-  \url{http://www.gnu.org/software/womb/gnits/}.}.
-\item A list of authors and contributors can be included in a file
-  called \texttt{AUTHORS}, acknowledging any help that you may have
-  obtained. For small projects, this information is often also
-  included in the \texttt{README}.
-\item Use meaningful filenames, and not \texttt{temp1.py},
-  \texttt{temp2.py}. 
-\item Document your code. Each file should at least have a short
-  description about its reason for existence. Non obvious steps in the
-  code should be commented. Functions arguments and return values should be described.
-\item Describe how the results presented in your paper can be reproduced.
-\end{itemize}
-
-
-\subsection{\LaTeX{} Primer}
-\label{sec:latex-primer}
-
-\LaTeX{} is one of the most commonly used document preparation systems
-for scientific journals and conferences. It is based on the idea
-that authors should be able to focus on the content of what they are
-writing without being distracted by its visual presentation.
-The source of this file can be used as a starting point for how to use
-the different commands in \LaTeX{}. We are using an IEEE style for
-this course.
-
-\subsubsection{Installation}
-
-There are various different packages available for processing \LaTeX{}
-documents. See our webpage for more links for getting started.
-
-\subsubsection{Compiling \LaTeX{}}
-Your directory should contain at least~4 files, in addition to image
-files. Images should ideally be
-\texttt{.pdf} format (or \texttt{.png}).
-
-\subsubsection{Equations}
-
-There are three types of equations available: inline equations, for
-example $y=mx + c$, which appear in the text, unnumbered equations
-$$y=mx + c,$$
-which are presented on a line on its own, and numbered equations
-\begin{equation}
-  \label{eq:linear}
-  y = mx + c
-\end{equation}
-which you can refer to at a later point (Equation~(\ref{eq:linear})).
-
-\subsubsection{Tables and Figures}
-
-Tables and figures are ``floating'' objects, which means that the text
-can flow around it.
-Note that \texttt{figure*} and \texttt{table*} cause the corresponding
-figure or table to span both columns.
-
+As with most engineering concepts, we are trading-off between two magnitudes to achieve optimal performance. In our situation, we are willing to increase the number and the cost of iterations in order to reduce gradient exchange times. Quantization enables this fine-tuning between computation costs and communication costs to happen smoothly. We can therefore optimize appropriately each model and achieve real time speedup.
 
 
 \section{Summary}
 
-The aim of a scientific paper is to convey the idea or discovery of
-the researcher to the minds of the readers. The associated software
-package provides the relevant details, which are often only briefly
-explained in the paper, such that the research can be reproduced.
-To write good papers, identify your key idea, make your contributions
-explicit, and use examples and illustrations to describe the problems
-and solutions.
+We have presented 3 practical implementations of gradient quantization on deep convolutional neural networks, and have observed the effects on convergence. At a high level, quantization increases the number of iterations to convergence in order to reduce communication times. It is quite remarkable that with 8 bits quantization, we can achieve similar performance to baseline for almost no increase in convergence time, and reduce bandwidth usage by at least 3.6x. We also provide all the necessary code to reproduce our experiments.
 
 \section*{Acknowledgements}
 
-Thanks to the authors of QSGD for amazing paper. Thanks to the provided code which we adapted and enabled us to quickly start working on the interesting stuff.
-Thanks to our corrector for taking the time to read our work.
+We would like to thank the authors of the QSGD paper for their amazing work and interesting paper. We would also like to thank the developers who publicly made available their implementation and training of the networks. This enabled us to spend most of our time on the interesting parts of the project. Last but not least, we would like to thank our corrector for taking the time to read through our work.
 
 
 \newpage

@@ -32,4 +32,22 @@ D.~Alistarh, D.~Grubic, J.~Li, R.~Tomioka, and M.~Vojnovic, ``Qsgd:
   \url{https://proceedings.neurips.cc/paper_files/paper/2017/file/6c340f25839e6acdc73414517203f5f0-Paper.pdf}
 \BIBentrySTDinterwordspacing
 
+\bibitem{alexnet}
+``{AlexNet PyTorch Implementation},''
+  \url{https://blog.paperspace.com/alexnet-pytorch/}, accessed: June 11, 2023.
+
+\bibitem{resnet}
+\BIBentryALTinterwordspacing
+H.~Kaiming, Z.~Xiangyu, R.~Shaoqing, and S.~Jian, ``Deep residual learning for
+  image recognition,'' \emph{IEEE Conference on Computer Vision and Pattern
+  Recognition (CVPR)}, 2015. [Online]. Available:
+  \url{https://arxiv.org/pdf/1512.03385.pdf}
+\BIBentrySTDinterwordspacing
+
+\bibitem{shorten}
+\BIBentryALTinterwordspacing
+C.~Shorten, ``Introduction to resnets,'' January 2010. [Online]. Available:
+  \url{https://towardsdatascience.com/introduction-to-resnets-c0a830a288a4}
+\BIBentrySTDinterwordspacing
+
 \end{thebibliography}
